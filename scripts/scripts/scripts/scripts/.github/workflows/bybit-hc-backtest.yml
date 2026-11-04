@@ -1,0 +1,41 @@
+name: Bybit H-C Fourier backtest
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Data di inizio UTC (YYYY-MM-DD)"
+        required: true
+        default: "2018-01-01"
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip numpy pandas requests
+
+      - name: Run Bybit backtest
+        run: |
+          python scripts/backtest_bybit_hc.py \
+            --start "${{ inputs.start_date }}" \
+            --out bybit_hc_results
+
+      - name: Upload backtest report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bybit-hc-backtest-results
+          path: bybit_hc_results/
+          if-no-files-found: error
